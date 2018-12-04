@@ -67,7 +67,7 @@ input {
   width: 100%;
 }
 </style>
-	<title>GIF Portal</title>
+	<title>WEBM Portal</title>
 </head>
 <body>
 <?php
@@ -86,8 +86,8 @@ if (file_exists('db.sqlite')) {
 		if (!empty($_POST['add_admin_name']) && !empty($_POST['add_admin_pass'])) {
 			add_admin($_POST['add_admin_name'], $_POST['add_admin_pass']);
 		}
-		if (!empty($_POST['add_gif_name']) && !empty($_POST['add_gif_url'])) {
-			add_gif($_POST['add_gif_name'], $_POST['add_gif_url']);
+		if (!empty($_POST['add_webm_name']) && !empty($_POST['add_webm_url'])) {
+			add_webm($_POST['add_webm_name'], $_POST['add_webm_url']);
 		}
 		if (isset($_POST['config'])) {
 			update_config($_POST['config']);
@@ -95,8 +95,8 @@ if (file_exists('db.sqlite')) {
 		if (isset($_POST['delete_admin'])) {
 			delete_admin($_POST['delete_admin']);
 		}
-		if (isset($_POST['delete_gif'])) {
-			delete_gif($_POST['delete_gif']);
+		if (isset($_POST['delete_webm'])) {
+			delete_webm($_POST['delete_webm']);
 		}?>
 <div style="align: right; height: 5vh; background: rgba(0, 0, 0, .5);">
 <ul>
@@ -162,32 +162,30 @@ echo "<li>$username Logged in</li>";
 </form>
 </details>
 <details>
-<summary>GIFs</summary>
-</details>
-<form name="GIFs" method="post" action="">
+<summary>WEBMs</summary>
+<form name="WEBMs" method="post" action="">
 <table align="center">
 	<tr>
 		<th>Name</th>
 		<th>URL</th>
 		<th>Delete</th>
 	</tr>
-		<th><input type="text" name="add_gif_name" placeholder="Name"></th>
-		<th colspan="2"><input type="text" name="add_gif_url" placeholder="URL"></th>
+		<th><input type="text" name="add_webm_name" placeholder="Name"></th>
+		<th colspan="2"><input type="text" name="add_webm_url" placeholder="URL"></th>
 	<?php
-		$gifs = get_gifs();
-		foreach ($gifs as $element) {
-			$name = $element['name'];
-			$url = $element['url'];
+		$webms = get_webms();
+		foreach ($webms as $element) {
+			$name = $element['file'];
 			echo "<tr>";
-			echo "<td>$name</td>";
-			echo "<td>$url</td>";
-			echo "<td><input type=\"checkbox\" name=\"delete_gif[]\" value=\"$url\"></td>";
+			echo "<td colspan=\"2\">$name</td>";
+			echo "<td><input type=\"checkbox\" name=\"delete_webm[]\" value=\"$name\"></td>";
 			echo "</tr>";
 		}?>
 		<th colspan="3"><input type="submit" value="Update"></th>
 	</tr>
 </table>
 </form>
+</details>
 </div>
 <?php
 	} else {
@@ -221,6 +219,7 @@ echo "<li>$username Logged in</li>";
 		$query->bindValue(':name', "columns", PDO::PARAM_STR);
 		$query->bindValue(':value', "4", PDO::PARAM_STR);
 		$query->execute();
+		mkdir('webms', 0744);
 		file_put_contents('.htaccess', "<Files \"db.sqlite\">\nDeny From All\n</Files>\n<Files \"sess*\">\nDeny From All\n</Files>");
 		header("Refresh:1");
 	}

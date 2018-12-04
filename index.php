@@ -33,18 +33,20 @@ body{
   background-size:cover;
   cursor: none;
 }
-img{
+video{
   display: inline-block;
   height: <?php echo 100 / $rows?>%;
   width: <?php echo 100 / $columns?>%;
   margin: 0;
   vertical-align: top;
+  object-fit: fill;
 }
 </style>
 <body>
 <?php
 for ($i = 1; $i <= $total; $i ++) {
-	echo '<img src="' . get_random_gif() . '">';
+	echo '<video autoplay loop>';
+	echo '<source type="video/webm" src="/webms/' . get_random_webm() . '"></video>';
 	if ($i % $columns == 0) {
 		echo '<br>' . "\n";
 	}

@@ -3,16 +3,15 @@
 function debugvar($variable) {
 	file_put_contents('debug.txt', print_r($variable, true));
 }
-//Initializes a sqlite database with a table for parameters, authentication, and a table for gifs, returns error code if there is an error
+//Initializes a sqlite database with a table for parameters, authentication, and a table for webms, returns error code if there is an error
 function initdb() {
 	$db = new PDO('sqlite:db.sqlite');
 	$dbcmds = ['CREATE TABLE IF NOT EXISTS config(
 		name TEXT NOT NULL,
 		value TEXT NOT NULL
 		)',
-	'CREATE TABLE IF NOT EXISTS gifs(
-		name TEXT NOT NULL,
-		url TEXT NOT NULL
+	'CREATE TABLE IF NOT EXISTS webms(
+		file TEXT NOT NULL,
 		)',
 	'CREATE TABLE IF NOT EXISTS auth(
 		username TEXT NOT NULL,
@@ -112,35 +111,63 @@ function update_config($config) {
 		$query->execute();
 	}
 }
-//Returns the url of a random gif from the database
-function get_random_gif() {
-	$gifs = get_gifs();
-	srand();
-	$url = $gifs[array_rand($gifs)][1];
-	return $url;
+//Check if for needle in multidiensional array
+function in_array_m($needle, $haystack) {
+	foreach ($haystack as $element) {
+		if (in_array($needle, $element)) {
+			return true;
+		}
+	}
+	return false;
 }
-//Returns urls of all gifs as an array
-function get_gifs() {
+//Returns the url of a random webm from the database
+function get_random_webm() {
+	$webms = get_webms();
+	srand();
+	$file = $webms[array_rand($webms)][0];
+	return $file;
+}
+//Returns urls of all wemb as an array
+function get_webms() {
 	$db = new PDO('sqlite:db.sqlite');
-	$query = $db->prepare('SELECT * FROM gifs');
+	$query = $db->prepare('SELECT * FROM webms');
 	$query->execute();
 	$result = $query->fetchAll();
 	return $result;
 }
-//Adds a gif to the database
-function add_gif($name, $url) {
+//Adds a webm to the database
+function add_webm($file, $url) {
+	$webms = get_webms();
+	$name = str_replace('.webm', '', $file);
+	if (in_array_m("$name.webm", $webms)) {
+		echo("A WEBM by that name already exists");
+		exit();
+	}
+	if (strpos($url, '.webm') !== false) {
+		file_put_contents("webms/$name.webm", fopen("$url", 'r'));
+	} elseif (strpos($url, '.gif') !== false) {
+		file_put_contents("webms/$name.gif", fopen("$url", 'r'));
+		$escapedGif = escapeshellarg("webms/$name.gif");
+		$escapedWebm = escapeshellarg("webms/$name.webm");
+		$ffmpegArgs = '-c:v libvpx -crf 4 -b:v 5000K -auto-alt-ref 0 -threads 8';
+		$ffmpegString = "ffmpeg -i $escapedGif $ffmpegArgs $escapedWebm 2>&1";
+		exec("$ffmpegString");
+		unlink("webms/$name.gif");
+	} else {
+		echo('Error, probably bad URL');
+		exit();
+	}
 	$db = new PDO('sqlite:db.sqlite');
-	$query = $db->prepare('INSERT INTO gifs (url, name) VALUES (:url, :name)');
-	$query->bindValue(':url', $url, PDO::PARAM_STR);
-	$query->bindValue(':name', $name, PDO::PARAM_STR);
+	$query = $db->prepare('INSERT INTO webms (file) VALUES (:file)');
+	$query->bindValue(':file', "$name.webm", PDO::PARAM_STR);
 	$query->execute();
 }
-//Removes a gif from tha database
-function delete_gif($delete) {
+//Removes a webm from tha database
+function delete_webm($delete) {
 	$db = new PDO('sqlite:db.sqlite');
-	foreach ($delete as $url) {
-		$query = $db->prepare('DELETE FROM gifs WHERE url=:url');
-		$query->bindValue(':url', $url, PDO::PARAM_STR);
+	foreach ($delete as $file) {
+		$query = $db->prepare('DELETE FROM webms WHERE file=:file');
+		$query->bindValue(':file', $file, PDO::PARAM_STR);
 		$query->execute();
 	}
 }
